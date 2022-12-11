@@ -22,6 +22,7 @@ func Title(urls ...string) <-chan string {
 			} else {
 				c <- matches[1]
 			}
+			close(c)
 		}(url)
 	}
 
