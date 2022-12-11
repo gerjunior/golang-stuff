@@ -1,5 +1,10 @@
 package main
 
+import (
+	"fmt"
+	"time"
+)
+
 // func main() {
 // thread 1
 // thread 1 <-> thread 2
@@ -64,3 +69,37 @@ package main
 // 		fmt.Println(x)
 // 	}
 // }
+
+// func main() {
+// 	ch := make(chan int, 1)
+
+// 	ch <- 1 // sending data to a channel
+// 	<-ch    // receiving data from the channel
+
+// 	ch <- 2
+
+// 	fmt.Println(<-ch)
+// }
+
+func run(base int, c chan int) {
+	time.Sleep(time.Second)
+	c <- 2 * base
+
+	time.Sleep(time.Second)
+	c <- 3 * base
+
+	time.Sleep(time.Second)
+	c <- 4 * base
+}
+
+// ? just like nodeJS iterators and generators!
+// ? yield is similar to -> (send data)
+// ? <- is similar to generator.next (read data)
+func main() {
+	c := make(chan int)
+	go run(2, c)
+
+	fmt.Println(<-c)
+	fmt.Println(<-c)
+	fmt.Println(<-c)
+}
