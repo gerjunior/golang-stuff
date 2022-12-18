@@ -1,46 +1,73 @@
 package main
 
 import (
+	"encoding/csv"
+	"flag"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 )
 
 func main() {
-	file, err := os.ReadFile("./problems.csv")
-	if err != nil {
-		panic(err)
-	}
+	csvFileName := flag.String("csv", "./problems.csv", "a csv file in the format of 'question,answer'")
+	flag.Parse()
 
-	stringFile := string(file)
-	questions := strings.Split(stringFile, "\n")
+	problems := parseProblems(*csvFileName)
 
 	correct := 0
-	for _, line := range questions {
-		res := strings.Split(line, ",")
-		question := res[0]
-		a := res[1]
+	for i, p := range problems {
+		answer := scanAnswer(i+1, p.question)
 
-		answer, err := strconv.Atoi(a)
-		if err != nil {
-			panic(err)
-		}
-
-		fmt.Printf("%s = ", question)
-
-		var response string
-		fmt.Scanln(&response)
-
-		responseInt, err := strconv.Atoi(response)
-		if err != nil {
-			continue
-		}
-
-		if answer == responseInt {
-			correct++
+		if answer == p.answer {
+			correct += 1
 		}
 	}
 
-	fmt.Printf("You got %v of %v correctly.\n", correct, len(questions))
+	fmt.Printf("You scored %d out of %d.\n", correct, len(problems))
+}
+
+func parseProblems(csvFileName string) []problem {
+	file, err := os.Open(csvFileName)
+	if err != nil {
+		exit(fmt.Sprintf("Failed to open the CSV file: %s\n", csvFileName))
+	}
+
+	r := csv.NewReader(file)
+	lines, err := r.ReadAll()
+	if err != nil {
+		exit("Failed to parse the provided CSV file.")
+	}
+
+	problems := parseLines(lines)
+	return problems
+}
+
+func parseLines(lines [][]string) []problem {
+	ret := make([]problem, len(lines))
+
+	for i, line := range lines {
+		ret[i] = problem{
+			question: line[0],
+			answer:   strings.TrimSpace(line[1]),
+		}
+	}
+
+	return ret
+}
+
+func scanAnswer(number int, question string) string {
+	fmt.Printf("Problem #%d: %s = \n", number, question)
+	var answer string
+	fmt.Scanf("%s\n", &answer)
+	return answer
+}
+
+type problem struct {
+	question string
+	answer   string
+}
+
+func exit(msg string) {
+	fmt.Print(msg)
+	os.Exit(1)
 }
