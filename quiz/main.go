@@ -20,26 +20,32 @@ func main() {
 	correct := 0
 	problems := parseProblems(*csvFileName)
 
-	go func() {
-		for {
-			select {
-			case <-timer.C:
-				fmt.Println("TIME'S UP!")
-				fmt.Printf("You scored %d out of %d.\n", correct, len(problems))
-				os.Exit(0)
-			}
-		}
-	}()
+	showScore := func() {
+		fmt.Printf("\nYou scored %d out of %d.\n", correct, len(problems))
+	}
 
 	for i, p := range problems {
-		answer := scanAnswer(i+1, p.question)
+		fmt.Printf("Problem #%d: %s = ", i+1, p.question)
+		answerCh := make(chan string)
 
-		if answer == p.answer {
-			correct += 1
+		go func() {
+			var answer string
+			fmt.Scanf("%s\n", &answer)
+			answerCh <- answer
+		}()
+
+		select {
+		case <-timer.C:
+			showScore()
+			return
+		case answer := <-answerCh:
+			if answer == p.answer {
+				correct++
+			}
 		}
 	}
 
-	fmt.Printf("You scored %d out of %d.\n", correct, len(problems))
+	showScore()
 }
 
 func parseProblems(csvFileName string) []problem {
@@ -69,13 +75,6 @@ func parseLines(lines [][]string) []problem {
 	}
 
 	return ret
-}
-
-func scanAnswer(number int, question string) string {
-	fmt.Printf("Problem #%d: %s = \n", number, question)
-	var answer string
-	fmt.Scanf("%s\n", &answer)
-	return answer
 }
 
 type problem struct {
