@@ -14,6 +14,7 @@ type Task struct {
 }
 
 func init() {
+	ConnectDB()
 	db = GetDB()
 	db.AutoMigrate(&Task{})
 }

@@ -10,7 +10,7 @@ var (
 	gormDB *gorm.DB
 )
 
-func init() {
+func ConnectDB() {
 	d, err := gorm.Open("mysql", "root:root@(localhost)/tododb?charset=utf8&parseTime=True&loc=Local")
 	fmt.Println("CONNECTED")
 	if err != nil {
