@@ -10,79 +10,98 @@ import (
 )
 
 func main() {
-	csvFileName := flag.String("csv", "./problems.csv", "a csv file in the format of 'question,answer'")
-	duration := flag.Duration("d", time.Second*30, "limit time to answer the questions. If the time runs out, the program stops and the score shows up.")
-	flag.Parse()
+	flags := getFlags()
+	questions := parseCsv(flags.csvFileName)
 
-	timer := time.NewTimer(*duration)
+	fmt.Printf("You have %v to answer %v questions. Are you ready?\n", flags.duration, len(questions))
+	countdown(5)
+
+	timer := time.NewTimer(flags.duration)
 	defer timer.Stop()
 
 	correct := 0
-	problems := parseProblems(*csvFileName)
+	for i, record := range questions {
+		problem := Problem{
+			question: record[0],
+			answer:   strings.TrimSpace(record[1]),
+		}
 
-	showScore := func() {
-		fmt.Printf("\nYou scored %d out of %d.\n", correct, len(problems))
-	}
-
-	for i, p := range problems {
-		fmt.Printf("Problem #%d: %s = ", i+1, p.question)
-		answerCh := make(chan string)
+		fmt.Printf("Question #%d: %s = ", i+1, problem.question)
+		inputCh := make(chan string)
 
 		go func() {
-			var answer string
-			fmt.Scanf("%s\n", &answer)
-			answerCh <- answer
+			var input string
+			fmt.Scanf("%s\n", &input)
+			inputCh <- input
 		}()
 
 		select {
-		case <-timer.C:
-			showScore()
-			return
-		case answer := <-answerCh:
-			if answer == p.answer {
+		case res := <-inputCh:
+			if res == problem.answer {
 				correct++
 			}
+		case <-timer.C:
+			fmt.Printf("\nTime's up! You scored %d out of %d!\n", correct, len(questions))
+			return
 		}
+
 	}
 
-	showScore()
+	fmt.Printf("You scored %d out of %d!\n", correct, len(questions))
 }
 
-func parseProblems(csvFileName string) []problem {
-	file, err := os.Open(csvFileName)
-	if err != nil {
-		exit(fmt.Sprintf("Failed to open the CSV file: %s\n", csvFileName))
-	}
-
-	r := csv.NewReader(file)
-	lines, err := r.ReadAll()
-	if err != nil {
-		exit("Failed to parse the provided CSV file.")
-	}
-
-	problems := parseLines(lines)
-	return problems
+type Flags struct {
+	csvFileName string
+	duration    time.Duration
 }
 
-func parseLines(lines [][]string) []problem {
-	ret := make([]problem, len(lines))
-
-	for i, line := range lines {
-		ret[i] = problem{
-			question: line[0],
-			answer:   strings.TrimSpace(line[1]),
-		}
-	}
-
-	return ret
-}
-
-type problem struct {
+type Problem struct {
 	question string
 	answer   string
 }
 
+func getFlags() Flags {
+	csvFileName := flag.String("csv", "./problems.csv", "csv file")
+	duration := flag.Duration("duration", time.Second*15, "duration timeout to answer all questions")
+	flag.Parse()
+
+	return Flags{
+		csvFileName: *csvFileName,
+		duration:    *duration,
+	}
+}
+
+func parseCsv(csvFileName string) [][]string {
+	csvFile, err := os.Open(csvFileName)
+	if err != nil {
+		exit("There was an error while trying to read the CSV file")
+	}
+
+	questions, err := csv.NewReader(csvFile).ReadAll()
+	if err != nil {
+		exit("There was an error while parsing your csv file")
+	}
+
+	return questions
+}
+
+func countdown(seconds int) {
+	ticker := time.NewTicker(time.Second)
+
+	for i := seconds; i >= 0; i-- {
+		select {
+		case <-ticker.C:
+			if i == 0 {
+				fmt.Print(" GO! \n\n")
+				ticker.Stop()
+			} else {
+				fmt.Printf(" %d ", i)
+			}
+		}
+	}
+}
+
 func exit(msg string) {
-	fmt.Print(msg)
+	fmt.Println(msg)
 	os.Exit(1)
 }
