@@ -27,8 +27,7 @@ func main() {
 	}
 
 	book := Book{}
-	err = json.Unmarshal(file, &book)
-	if err != nil {
+	if err := json.Unmarshal(file, &book); err != nil {
 		panic(err)
 	}
 
