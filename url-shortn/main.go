@@ -1,8 +1,10 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net/http"
+	"os"
 
 	urlshort "github.com/gerjunior/golang-stuff/url-shortn/urlshort"
 )
@@ -10,19 +12,21 @@ import (
 func main() {
 	mux := defaultMux()
 
+	yamlFilePath := flag.String("yaml", "", "path to yaml file containing the mapped paths")
+	flag.Parse()
+
+	yaml, err := os.ReadFile(*yamlFilePath)
+	if err != nil {
+		panic(err)
+	}
+
 	pathsToUrls := map[string]string{
 		"/urlshort-godoc": "https://godoc.org/github.com/gophercises/urlshort",
 		"/yaml-godoc":     "https://godoc.org/gopkg.in/yaml.v2",
 	}
 	mapHandler := urlshort.MapHandler(pathsToUrls, mux)
 
-	yaml := `
-- path: /urlshort
-  url: https://github.com/gophercises/urlshort
-- path: /urlshort-final
-  url: https://github.com/gophercises/urlshort/tree/solution
-`
-	yamlHandler, err := urlshort.YAMLHandler([]byte(yaml), mapHandler)
+	yamlHandler, err := urlshort.YAMLHandler(yaml, mapHandler)
 	if err != nil {
 		panic(err)
 	}
