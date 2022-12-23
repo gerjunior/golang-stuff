@@ -1,6 +1,7 @@
 package urlshort
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"gopkg.in/yaml.v3"
@@ -42,6 +43,25 @@ func parseYaml(ymlBytes []byte) ([]pathUrl, error) {
 		return nil, err
 	}
 
+	return parsed, nil
+}
+
+func JSONHandler(jsonBytes []byte, fallback http.Handler) (http.HandlerFunc, error) {
+	parsedJson, err := parseJson(jsonBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	pathToUrls := buildMap(parsedJson)
+	return MapHandler(pathToUrls, fallback), nil
+}
+
+func parseJson(jsonBytes []byte) ([]pathUrl, error) {
+	parsed := []pathUrl{}
+	err := json.Unmarshal(jsonBytes, &parsed)
+	if err != nil {
+		return nil, err
+	}
 	return parsed, nil
 }
 
