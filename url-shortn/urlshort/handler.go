@@ -1,9 +1,11 @@
 package urlshort
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
+	"github.com/gerjunior/golang-stuff/url-shortn/db"
 	"gopkg.in/yaml.v3"
 )
 
@@ -72,4 +74,18 @@ func buildMap(data []pathUrl) map[string]string {
 	}
 
 	return pathToUrls
+}
+
+func RedisHandler(ctx context.Context, fallback http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Path
+
+		url, err := db.Rdb.Get(ctx, path).Result()
+		if err != nil {
+			fallback.ServeHTTP(w, r)
+			return
+		}
+
+		http.Redirect(w, r, url, http.StatusSeeOther)
+	}
 }
