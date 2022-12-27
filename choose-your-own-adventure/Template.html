@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{.Title}}</title>
+  <style>
+    body {
+      margin: 0 25vw;
+      /* width: 100%; */
+    }
+
+    div {
+      display: flex;
+      width: 100%;
+      flex: auto;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    ul {
+      display: flex;
+      justify-content: space-around;
+    }
+
+    li {
+      list-style: none;
+      margin: 0 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div>
+    <h1>{{.Title}}</h1>
+
+    {{range .Story}}
+    <p>{{.}}</p>
+    {{end}}
+
+    <br />
+
+    {{if .Options}}
+    <ul>
+      {{range .Options}}
+      <li>
+        <a href="/{{.Arc}}">
+          <button>{{.Text}}</button>
+        </a>
+      </li>
+      {{end}}
+    </ul>
+    {{else}}
+    <p><b>The End</b></p>
+
+    <a href="/intro">
+      <button>Start Over</button>
+    </a>
+
+    {{end}}
+
+  </div>
+</body>
+
+</html>
