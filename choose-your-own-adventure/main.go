@@ -1,36 +1,14 @@
 package main
 
 import (
-	"encoding/json"
+	"flag"
 	"fmt"
-	"os"
 	"strconv"
+
+	"github.com/gerjunior/golang-stuff/choose-your-own-adventure/story"
 )
 
-type StoryOptions struct {
-	Text string
-	Arc  string
-}
-
-type StoryArc struct {
-	Title   string
-	Story   []string
-	Options []StoryOptions
-}
-
-type Book map[string]StoryArc
-
-func main() {
-	file, err := os.ReadFile("./story.json")
-	if err != nil {
-		panic(err)
-	}
-
-	book := Book{}
-	if err := json.Unmarshal(file, &book); err != nil {
-		panic(err)
-	}
-
+func read(book story.Book) {
 	arc := book["intro"]
 
 	for {
@@ -77,4 +55,16 @@ func main() {
 			arc = book[chosenArc.Arc]
 		}
 	}
+}
+
+func main() {
+	filePath := flag.String("f", "./story.json", "book json file path")
+	flag.Parse()
+
+	book, err := story.ParseBook(*filePath)
+	if err != nil {
+		panic(err)
+	}
+
+	read(book)
 }
