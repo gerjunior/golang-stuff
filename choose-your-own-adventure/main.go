@@ -15,14 +15,21 @@ var book *story.Book
 var tmpl *template.Template
 
 func chapterHandler(w http.ResponseWriter, r *http.Request) {
-	chapter := strings.Split(r.URL.Path, "/")[1]
-	content := (*book)[chapter]
-
-	err := tmpl.Execute(w, content)
-	if err != nil {
-		fmt.Println(err)
-		w.Write([]byte("There was an error while executing the template for this book."))
+	path := strings.TrimSpace(r.URL.Path)
+	if path == "" || path == "/" {
+		path = "/intro"
 	}
+
+	if chapter, ok := (*book)[path[1:]]; ok {
+		err := tmpl.Execute(w, chapter)
+		if err != nil {
+			fmt.Println(err)
+			http.Error(w, "Something went wrong...", http.StatusBadRequest)
+		}
+		return
+	}
+
+	http.Error(w, "Chapter not found...", http.StatusBadRequest)
 }
 
 func main() {
