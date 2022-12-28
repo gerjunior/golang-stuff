@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 	"strings"
 
@@ -44,7 +45,5 @@ func main() {
 		}
 	})
 
-	if err := http.ListenAndServe(":8080", nil); err != nil {
-		panic(err)
-	}
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
