@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"html/template"
@@ -12,37 +11,35 @@ import (
 	"github.com/gerjunior/golang-stuff/choose-your-own-adventure/story"
 )
 
-func returnError(w http.ResponseWriter, res map[string]interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(res)
+var book *story.Book
+var tmpl *template.Template
+
+func chapterHandler(w http.ResponseWriter, r *http.Request) {
+	chapter := strings.Split(r.URL.Path, "/")[1]
+	content := (*book)[chapter]
+
+	err := tmpl.Execute(w, content)
+	if err != nil {
+		fmt.Println(err)
+		w.Write([]byte("There was an error while executing the template for this book."))
+	}
 }
 
 func main() {
+	port := flag.Int("p", 8080, "port to run the web app")
 	filePath := flag.String("f", "./story.json", "book json file path")
 	flag.Parse()
 
-	book, err := story.ParseBook(*filePath)
+	parsedBook, err := story.ParseBook(*filePath)
 	if err != nil {
 		panic(err)
 	}
 
-	tmpl, err := template.New("Template.html").ParseFiles("Template.html")
-	if err != nil {
-		panic(err)
-	}
+	book = &parsedBook
+	tmpl = template.Must(template.New("Template.html").ParseFiles("Template.html"))
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		chapter := strings.Split(r.URL.Path, "/")[1]
-		content := book[chapter]
+	http.HandleFunc("/", chapterHandler)
 
-		err = tmpl.Execute(w, content)
-		if err != nil {
-			fmt.Println(err)
-			returnError(w, map[string]interface{}{
-				"error": "Unable to execute template",
-			})
-		}
-	})
-
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	fmt.Printf("Listening on port :%d \n", *port)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", *port), nil))
 }
