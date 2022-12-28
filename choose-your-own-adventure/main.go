@@ -32,11 +32,10 @@ func main() {
 	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		arc := strings.Split(r.URL.Path, "/")[1]
+		chapter := strings.Split(r.URL.Path, "/")[1]
+		content := book[chapter]
 
-		story := book[arc]
-
-		err = tmpl.Execute(w, story)
+		err = tmpl.Execute(w, content)
 		if err != nil {
 			fmt.Println(err)
 			returnError(w, map[string]interface{}{

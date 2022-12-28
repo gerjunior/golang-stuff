@@ -5,18 +5,18 @@ import (
 	"os"
 )
 
-type StoryOptions struct {
-	Text string
-	Arc  string
+type ChapterOptions struct {
+	Text    string
+	Chapter string `json:"arc"`
 }
 
-type StoryArc struct {
-	Title   string
-	Story   []string
-	Options []StoryOptions
+type BookChapter struct {
+	Title      string
+	Paragraphs []string `json:"story"`
+	Options    []ChapterOptions
 }
 
-type Book map[string]StoryArc
+type Book map[string]BookChapter
 
 func ParseBook(bookPath string) (Book, error) {
 	file, err := os.Open(bookPath)
