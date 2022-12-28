@@ -7,7 +7,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gerjunior/golang-stuff/choose-your-own-adventure/story"
+	story "github.com/gerjunior/golang-stuff/choose-your-own-adventure"
 )
 
 func main() {
