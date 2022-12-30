@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"html/template"
 	"log"
 	"net/http"
 
@@ -20,8 +19,8 @@ func main() {
 		panic(err)
 	}
 
-	tmpl := template.Must(template.New("Template.html").ParseFiles("Template.html"))
-	handler := story.NewHandler(parsedBook, tmpl)
+	// handler := story.NewHandler(parsedBook, story.WithTemplate(nil))
+	handler := story.NewHandler(parsedBook)
 
 	http.HandleFunc("/", handler.ServeHTTP)
 

@@ -60,6 +60,21 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Chapter not found...", http.StatusBadRequest)
 }
 
-func NewHandler(b Book, t *template.Template) http.Handler {
-	return handler{b, t}
+type HandlerOption func(h *handler)
+
+func WithTemplate(t *template.Template) HandlerOption {
+	return func(h *handler) {
+		h.t = t
+	}
+}
+
+func NewHandler(b Book, opts ...HandlerOption) http.Handler {
+	defaultTmpl := template.Must(template.New("Template.html").ParseFiles("Template.html"))
+	h := handler{b, defaultTmpl}
+
+	for _, opt := range opts {
+		opt(&h)
+	}
+
+	return h
 }
