@@ -38,17 +38,15 @@ func ParseBook(bookPath string) (Book, error) {
 }
 
 type handler struct {
-	b Book
-	t *template.Template
+	b      Book
+	t      *template.Template
+	pathFn func(r *http.Request) string
 }
 
 func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	path := strings.TrimSpace(r.URL.Path)
-	if path == "" || path == "/" {
-		path = "/intro"
-	}
+	path := h.pathFn(r)
 
-	if chapter, ok := (h.b)[path[1:]]; ok {
+	if chapter, ok := (h.b)[path]; ok {
 		err := h.t.Execute(w, chapter)
 		if err != nil {
 			fmt.Println(err)
@@ -60,6 +58,15 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Chapter not found...", http.StatusBadRequest)
 }
 
+func pathFn(r *http.Request) string {
+	path := strings.TrimSpace(r.URL.Path)
+	if path == "" || path == "/" {
+		path = "/intro"
+	}
+
+	return path[1:]
+}
+
 type HandlerOption func(h *handler)
 
 func WithTemplate(t *template.Template) HandlerOption {
@@ -68,9 +75,15 @@ func WithTemplate(t *template.Template) HandlerOption {
 	}
 }
 
+func WithPathFunc(fn func(r *http.Request) string) HandlerOption {
+	return func(h *handler) {
+		h.pathFn = fn
+	}
+}
+
 func NewHandler(b Book, opts ...HandlerOption) http.Handler {
 	defaultTmpl := template.Must(template.New("Template.html").ParseFiles("Template.html"))
-	h := handler{b, defaultTmpl}
+	h := handler{b, defaultTmpl, pathFn}
 
 	for _, opt := range opts {
 		opt(&h)
